@@ -2,7 +2,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CssBaseline, Box, Toolbar } from '@mui/material';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+
 // Pages publiques
 import Home from './pages/Home';
 import RoleSelection from './pages/RoleSelection';
