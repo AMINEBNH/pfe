@@ -1,0 +1,44 @@
+.messages-container {
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .messages-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .message-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #ececec;
+    padding-bottom: 1rem;
+  }
+  
+  .message-icon {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+  }
+  
+  .message-content {
+    flex-grow: 1;
+  }
+  
+  .message-sender {
+    font-weight: bold;
+    color: #2c3e50;
+  }
+  
+  .message-subject {
+    color: #7f8c8d;
+  }
+  
+  .message-time {
+    color: #bdc3c7;
+    font-size: 0.9rem;
+  }
+  

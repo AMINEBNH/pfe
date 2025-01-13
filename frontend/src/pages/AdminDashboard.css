@@ -1,0 +1,28 @@
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f7f9fb;
+}
+
+.dashboard-content {
+  flex: 1;
+  padding: 2rem;
+}
+
+.card {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.form-control {
+  margin-bottom: 1.5rem;
+}
+
+.button-container {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
