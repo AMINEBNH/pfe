@@ -21,6 +21,8 @@ import Courses from './pages/Courses';
 import CourseDetails from './pages/CourseDetails';
 import AdminStudents from './pages/AdminStudents'; // Importer le composant AdminStudents
 import AdminTeachers from './pages/AdminTeachers'; // Importer le composant AdminTeachers
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailed from './pages/PaymentFailed';
 
 // Composants
 import ProtectedRoute from './components/ProtectedRoute';
@@ -145,6 +147,10 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+
+          {/* Routes de paiement */}
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-failed" element={<PaymentFailed />} />
 
           {/* Route 404 éventuelle */}
           {/* <Route path="*" element={<NotFound />} /> */}

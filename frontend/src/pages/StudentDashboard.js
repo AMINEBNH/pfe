@@ -5,6 +5,9 @@ import axios from 'axios';
 import './StudentDashboard.css'; // Assurez-vous que ce fichier existe et est correctement importé
 
 const StudentDashboard = () => {
+  const [solde, setSolde] = useState(0);
+  const [transactions, setTransactions] = useState([]);
+  const [error, setError] = useState(''); // Pour afficher les erreurs
   const navigate = useNavigate();
 
   // États pour le planning et les événements
@@ -16,6 +19,56 @@ const StudentDashboard = () => {
 
   const [events, setEvents] = useState([]);
 
+  // Charger le solde et les transactions depuis l'API au montage du composant
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const email = localStorage.getItem('email');
+        if (!email) {
+          navigate('/login-student');
+          return;
+        }
+
+        // Récupérer le solde
+        const soldeResponse = await axios.get('http://localhost:5000/api/students/solde', {
+          params: { email },
+        });
+        setSolde(soldeResponse.data.solde);
+
+        // Récupérer les transactions
+        const transactionsResponse = await axios.get('http://localhost:5000/api/payments/by-student', {
+          params: { email },
+        });
+        setTransactions(transactionsResponse.data);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des données :', error);
+        setError('Impossible de récupérer les données. Veuillez réessayer plus tard.');
+      }
+    };
+
+    fetchStudentData();
+  }, [navigate]);
+
+  const handlePaymentClick = async () => {
+    try {
+      const email = localStorage.getItem('email');
+      const response = await axios.post('http://localhost:5000/api/payments/stripe', {
+        email,
+        amount: solde, // Le montant à payer correspond au solde
+      });
+
+      // Redirige vers Stripe Checkout
+      if (response.data.url) {
+        window.location.href = response.data.url;
+      } else {
+        setError('Impossible de rediriger vers Stripe.');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la création du paiement :', error);
+      setError('Erreur lors de la création du paiement. Veuillez réessayer.');
+    }
+  };
+
   // Charger les événements depuis l'API au montage du composant
   useEffect(() => {
     const fetchEvents = async () => {
@@ -23,7 +76,8 @@ const StudentDashboard = () => {
         const response = await axios.get('http://localhost:5000/api/events');
         setEvents(response.data);
       } catch (error) {
-        console.error('Erreur lors de la récupération des événements :', error);
+        console.error('Erreur lors de la récupération des événements :', error);
+        setError('Impossible de récupérer les événements.');
       }
     };
 
@@ -43,14 +97,33 @@ const StudentDashboard = () => {
           et quelques événements à venir.
         </p>
 
+        {error && <p className="error-message">{error}</p>} {/* Affiche une erreur si elle existe */}
+
         <div className="dashboard-sections">
           {/* SECTION SOLDE */}
           <div className="dashboard-card balance-card">
             <h2>Votre Solde</h2>
-            <p className="balance-amount">$1,250.00</p>
-            <button className="action-button" onClick={() => alert('Paiement...')}>
+            <p className="balance-amount">${solde.toFixed(2)}</p>
+            <button className="action-button" onClick={handlePaymentClick}>
               Payer Maintenant
             </button>
+          </div>
+
+          {/* SECTION TRANSACTIONS */}
+          <div className="dashboard-card transactions-card">
+            <h2>Historique des Transactions</h2>
+            {transactions.length > 0 ? (
+              <ul className="transactions-list">
+                {transactions.map((transaction) => (
+                  <li key={transaction._id}>
+                    {new Date(transaction.date).toLocaleDateString()} - ${transaction.amount} -{' '}
+                    {transaction.status}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>Aucune transaction pour le moment.</p>
+            )}
           </div>
 
           {/* SECTION COURS */}
@@ -78,12 +151,10 @@ const StudentDashboard = () => {
                 <strong>Prof. Dupont :</strong> Rendez-vous demain à 10h.
               </p>
               <p>
-                <strong>Administration :</strong> N'oubliez pas de payer vos frais
-                avant le 15.
+                <strong>Administration :</strong> N'oubliez pas de payer vos frais avant le 15.
               </p>
               <p>
-                <strong>Prof. Martin :</strong> Nouveaux exercices ajoutés sur la
-                plateforme.
+                <strong>Prof. Martin :</strong> Nouveaux exercices ajoutés sur la plateforme.
               </p>
             </div>
             <button

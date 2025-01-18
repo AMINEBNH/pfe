@@ -8,15 +8,19 @@ const studentSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   dateOfBirth: { type: Date, required: true },
-
-  // Classe : si vous gérez réellement les classes, sinon mettez-le en optionnel
   class: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: true },
-
   courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
   solde: { type: Number, default: 0 },
   photo: { type: String, default: '' },
-
-  // password: { type: String }, // si vous voulez gérer un password étudiant
+  transactions: [
+    {
+      date: { type: Date, default: Date.now },
+      amount: { type: Number, required: true },
+      method: { type: String, required: true }, // Visa, MasterCard, PayPal
+      transactionId: { type: String, required: true }, // ID de la transaction
+    },
+  ],
 });
+
 
 module.exports = mongoose.model('Student', studentSchema);

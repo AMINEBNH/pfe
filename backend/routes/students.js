@@ -1,6 +1,3 @@
-/***************************************
- * routes/students.js
- ***************************************/
 const express = require('express');
 const router = express.Router();
 const Student = require('../models/Student');
@@ -130,5 +127,47 @@ router.put('/:id', async (req, res) => {
       .json({ message: 'Erreur mise à jour étudiant', error: error.message });
   }
 });
+
+// GET /api/students/solde => Récupérer le solde de l'étudiant connecté
+router.get('/solde', async (req, res) => {
+  try {
+    const { email } = req.query; // Email envoyé depuis le frontend
+    const student = await Student.findOne({ email });
+    if (!student) {
+      return res.status(404).json({ message: 'Étudiant introuvable' });
+    }
+    res.status(200).json({ solde: student.solde });
+  } catch (error) {
+    console.error('Erreur lors de la récupération du solde :', error);
+    res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+});
+
+
+// GET /api/students/exist => Vérifie si un étudiant existe par email
+router.get('/exist', async (req, res) => {
+  try {
+    const { email } = req.query;
+    const student = await Student.findOne({ email });
+    if (!student) {
+      return res.status(404).json({ exists: false });
+    }
+    res.json({ exists: true, student });
+  } catch (error) {
+    console.error('Erreur lors de la vérification de l\'existence de l\'étudiant :', error);
+    res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+});
+
+
+router.get('/details', async (req, res) => {
+  const { email } = req.query;
+  const student = await Student.findOne({ email }).populate('class');
+  if (!student) {
+    return res.json({ exists: false });
+  }
+  res.json({ exists: true, student });
+});
+
 
 module.exports = router;
