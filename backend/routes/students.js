@@ -1,25 +1,59 @@
 const express = require('express');
 const router = express.Router();
 const Student = require('../models/Student');
-const Class = require('../models/Class'); // Ajout de la dépendance au modèle Class
+const User = require('../models/User'); // Import du modèle User
+
+
+
+
+// PUT /api/students/:id => Mettre à jour les informations d'un étudiant (inclut la classe)
+router.put('/:id', async (req, res) => {
+  try {
+    const studentId = req.params.id; // ID de l'étudiant depuis les paramètres
+    const { firstName, lastName, email, dateOfBirth, photo, class: studentClass } = req.body;
+
+    const updatedStudent = await Student.findByIdAndUpdate(
+      studentId,
+      {
+        firstName,
+        lastName,
+        email,
+        dateOfBirth,
+        photo,
+        class: studentClass || null, // Met à jour ou supprime la classe si non fournie
+      },
+      { new: true } // Retourne l'objet mis à jour
+    );
+
+    if (!updatedStudent) {
+      return res.status(404).json({ message: "Étudiant introuvable" });
+    }
+
+    res.status(200).json({
+      message: "Étudiant mis à jour avec succès",
+      student: updatedStudent,
+    });
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour de l'étudiant :", error);
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+});
+
+
+
 
 // 1) POST /api/students/register => Ajouter un étudiant
 router.post('/register', async (req, res) => {
   try {
-    const {
-      email,
-      firstName,
-      lastName,
-      dateOfBirth,
-      class: studentClass,  // Référence à la classe
-      courses,
-      photo,
-      // password, // si vous gérez un password
-    } = req.body;
+    const { email, firstName, lastName, dateOfBirth, photo } = req.body;
 
-    // Vérification email unique
-    const existing = await Student.findOne({ email });
-    if (existing) {
+    if (!email || !firstName || !lastName || !dateOfBirth) {
+      return res.status(400).json({ message: 'Tous les champs obligatoires doivent être remplis.' });
+    }
+
+    // Vérification de l'unicité
+    const existingStudent = await Student.findOne({ email });
+    if (existingStudent) {
       return res.status(400).json({ message: 'Email déjà utilisé pour un étudiant.' });
     }
 
@@ -28,146 +62,117 @@ router.post('/register', async (req, res) => {
       firstName,
       lastName,
       dateOfBirth,
-      class: studentClass,
-      courses,
       photo,
-      // password
     });
 
     const savedStudent = await newStudent.save();
-
-    // Mettre à jour la classe en ajoutant cet étudiant à sa liste
-    if (studentClass) {
-      const classe = await Class.findById(studentClass);
-      if (classe) {
-        classe.students.push(savedStudent._id);
-        await classe.save();
-      }
-    }
-
-    res.status(201).json({
-      message: 'Étudiant créé avec succès',
-      student: savedStudent,
-    });
+    res.status(201).json({ message: 'Étudiant créé avec succès', student: savedStudent });
   } catch (error) {
     console.error('Erreur création étudiant :', error);
-    res.status(500).json({
-      message: 'Erreur création étudiant',
-      error: error.message,
-    });
+    res.status(500).json({ message: 'Erreur création étudiant.', error: error.message });
   }
 });
+
 
 // 2) GET /api/students => Récupérer tous les étudiants
 router.get('/', async (req, res) => {
   try {
     const students = await Student.find();
-    // Si vous voulez .populate('class') ou .populate('courses') :
-    // const students = await Student.find().populate('class').populate('courses');
-
-    // Formatage optionnel
-    const formattedStudents = students.map((student) => ({
-      _id: student._id,
-      email: student.email,
-      fullName: `${student.firstName} ${student.lastName}`,
-      dateOfBirth: student.dateOfBirth,
-      class: student.class,
-      courses: student.courses,
-      photo: student.photo,
-    }));
-    res.status(200).json(formattedStudents);
+    res.status(200).json(students);
   } catch (error) {
     console.error('Erreur récupération étudiants :', error);
-    res
-      .status(500)
-      .json({ message: 'Erreur récupération étudiants', error: error.message });
+    res.status(500).json({ message: 'Erreur récupération étudiants', error: error.message });
   }
 });
 
-// 3) PUT /api/students/:id => Mettre à jour un étudiant
-router.put('/:id', async (req, res) => {
+// 3) POST /api/students/check-or-create => Vérifie ou crée un étudiant
+router.post('/check-or-create', async (req, res) => {
   try {
-    const studentId = req.params.id;
-    const {
-      email,
-      firstName,
-      lastName,
-      dateOfBirth,
-      class: studentClass,
-      courses,
-      photo,
-    } = req.body;
+    const { email } = req.body;
 
-    const updatedStudent = await Student.findByIdAndUpdate(
-      studentId,
-      {
-        email,
-        firstName,
-        lastName,
-        dateOfBirth,
-        class: studentClass,
-        courses,
-        photo,
-      },
-      { new: true }
-    );
-
-    if (!updatedStudent) {
-      return res.status(404).json({ message: 'Étudiant introuvable' });
+    if (!email) {
+      return res.status(400).json({ message: 'Email manquant dans la requête.' });
     }
 
-    res.status(200).json({
-      message: 'Étudiant mis à jour avec succès',
-      student: updatedStudent,
-    });
-  } catch (error) {
-    console.error("Erreur lors de la mise à jour de l'étudiant :", error);
-    res
-      .status(500)
-      .json({ message: 'Erreur mise à jour étudiant', error: error.message });
-  }
-});
+    const user = await User.findOne({ email, role: 'student' });
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé ou rôle incorrect.' });
+    }
 
-// GET /api/students/solde => Récupérer le solde de l'étudiant connecté
-router.get('/solde', async (req, res) => {
-  try {
-    const { email } = req.query; // Email envoyé depuis le frontend
     const student = await Student.findOne({ email });
     if (!student) {
-      return res.status(404).json({ message: 'Étudiant introuvable' });
+      return res.status(200).json({ exists: false, message: 'L’étudiant doit compléter son profil.' });
     }
-    res.status(200).json({ solde: student.solde });
+
+    res.status(200).json({ exists: true, student });
   } catch (error) {
-    console.error('Erreur lors de la récupération du solde :', error);
+    console.error('Erreur lors de la vérification :', error);
     res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 });
 
-
-// GET /api/students/exist => Vérifie si un étudiant existe par email
-router.get('/exist', async (req, res) => {
+// 4) GET /api/students/details => Récupérer les informations d'un étudiant
+router.get('/details', async (req, res) => {
   try {
     const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email manquant dans la requête.' });
+    }
+
     const student = await Student.findOne({ email });
     if (!student) {
-      return res.status(404).json({ exists: false });
+      return res.status(404).json({ message: 'Étudiant introuvable.' });
     }
-    res.json({ exists: true, student });
+
+    res.status(200).json({ student });
   } catch (error) {
-    console.error('Erreur lors de la vérification de l\'existence de l\'étudiant :', error);
+    console.error('Erreur lors de la récupération des informations de l\'étudiant :', error);
     res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 });
 
-
-router.get('/details', async (req, res) => {
-  const { email } = req.query;
-  const student = await Student.findOne({ email }).populate('class');
-  if (!student) {
-    return res.json({ exists: false });
+// 5) PUT /api/students/complete-profile => Compléter le profil d'un étudiant
+router.put('/complete-profile', async (req, res) => {
+  try {
+    console.log('Requête reçue :', req.body);
+    const { email, firstName, lastName, dateOfBirth, photo } = req.body;
+    const updatedStudent = await Student.findOneAndUpdate(
+      { email },
+      { firstName, lastName, dateOfBirth, photo },
+      { new: true }
+    );
+    console.log('Profil mis à jour :', updatedStudent);
+    if (!updatedStudent) {
+      return res.status(404).json({ message: 'Étudiant introuvable.' });
+    }
+    res.status(200).json({ message: 'Profil mis à jour avec succès.', student: updatedStudent });
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error: error.message });
   }
-  res.json({ exists: true, student });
 });
 
+// 6) GET /api/students/solde => Récupérer le solde d'un étudiant
+router.get('/solde', async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email manquant dans la requête.' });
+    }
+
+    const student = await Student.findOne({ email });
+
+    if (!student) {
+      return res.status(404).json({ message: 'Étudiant introuvable.' });
+    }
+
+    res.status(200).json({ solde: student.solde });
+  } catch (error) {
+    console.error('Erreur récupération du solde :', error);
+    res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+});
 
 module.exports = router;

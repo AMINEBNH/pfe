@@ -1,4 +1,3 @@
-// frontend/src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { CssBaseline, Box, Toolbar } from '@mui/material';
@@ -10,6 +9,7 @@ import LoginStudent from './pages/LoginStudent';
 import LoginTeacher from './pages/LoginTeacher';
 import LoginAdmin from './pages/LoginAdmin';
 import SignupStudent from './pages/Signup';
+import CompleteStudentProfile from './pages/CompleteStudentProfile'; // Import de la page
 
 // Pages protégées
 import StudentDashboard from './pages/StudentDashboard';
@@ -67,6 +67,7 @@ const App = () => {
           <Route path="/login-teacher" element={<LoginTeacher />} />
           <Route path="/login-admin" element={<LoginAdmin />} />
           <Route path="/signup-student" element={<SignupStudent />} />
+          <Route path="/complete-student-profile" element={<CompleteStudentProfile />} /> {/* Nouvelle route */}
 
           {/* Routes protégées */}
           <Route
