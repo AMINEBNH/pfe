@@ -1,12 +1,19 @@
-const mongoose = require('mongoose'); // Import de Mongoose
+const mongoose = require('mongoose');
 
 const classSchema = new mongoose.Schema({
   name: { type: String, required: true },
   level: { type: String, required: true },
-  students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Student' }],
+  price: { type: Number, required: true },
   teachers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Teacher' }],
+  students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Student' }],
   courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
-  price: { type: Number, default: 0 }, // Ajout du champ prix
+  schedule: [
+    {
+      day: { type: String },
+      time: { type: String },
+      course: { type: String },
+    },
+  ],
 });
 
-module.exports = mongoose.model('Class', classSchema); // Export du modèle
+module.exports = mongoose.model('Class', classSchema);

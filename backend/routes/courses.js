@@ -38,4 +38,26 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+
+// Récupérer les cours d'un enseignant spécifique => GET /courses?teacher=<teacherId>
+// Récupérer les cours (tous ou par enseignant spécifique)
+router.get('/', async (req, res) => {
+  console.log('Route GET /courses appelée');
+  const { teacher } = req.query;
+  console.log('Paramètre teacher :', teacher);
+  try {
+    let courses;
+    if (teacher) {
+      courses = await Course.find({ teacher }).populate('teacher', 'name subject image');
+      console.log('Cours trouvés pour teacher:', courses);
+    } else {
+      courses = await Course.find().populate('teacher', 'name subject image');
+      console.log('Tous les cours :', courses);
+    }
+    res.status(200).json(courses);
+  } catch (error) {
+    console.error('Erreur récupération cours :', error);
+    res.status(500).json({ message: 'Erreur récupération cours', error });
+  }
+});
 module.exports = router;

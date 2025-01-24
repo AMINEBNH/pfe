@@ -1,4 +1,4 @@
-// frontend/src/components/AppSidebar.js
+// src/components/AppSidebar.js
 import React, { useState } from 'react';
 import {
   Box,
@@ -12,67 +12,67 @@ import {
   Typography,
   IconButton,
 } from '@mui/material';
-
-// Icônes MUI
 import HomeIcon from '@mui/icons-material/Home';
 import MessageIcon from '@mui/icons-material/Message';
 import ClassIcon from '@mui/icons-material/Class';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
-import PeopleIcon from '@mui/icons-material/People'; // pour étudiants
-import PersonIcon from '@mui/icons-material/Person'; // pour enseignants
-
+import PeopleIcon from '@mui/icons-material/People';
+import PersonIcon from '@mui/icons-material/Person';
+import SchoolIcon from '@mui/icons-material/School';
 import { useNavigate } from 'react-router-dom';
 
 const AppSidebar = ({ drawerWidth = 240 }) => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const role = localStorage.getItem('role');
 
-  const role = localStorage.getItem('role'); // 'student', 'teacher', 'admin', etc.
-
-  // Calculer l'URL "Accueil" selon le rôle
   const getHomePath = () => {
     if (role === 'admin') return '/admin-dashboard';
     if (role === 'teacher') return '/teacher-dashboard';
     if (role === 'student') return '/student-dashboard';
-    return '/'; // si pas de rôle
+    return '/';
   };
 
-  // MenuItems commun à tous
   let menuItems = [
     { text: 'Accueil', icon: <HomeIcon />, path: getHomePath() },
-    { text: 'Messages', icon: <MessageIcon />, path: '/messages' },
-    { text: 'Cours', icon: <ClassIcon />, path: '/courses' },
   ];
 
-  // Si le rôle est admin, on peut ajouter des liens spécifiques
   if (role === 'admin') {
     menuItems = [
       ...menuItems,
       { text: 'Étudiants', icon: <PeopleIcon />, path: '/admin-students' },
       { text: 'Enseignants', icon: <PersonIcon />, path: '/admin-teachers' },
+      { text: 'Classes', icon: <SchoolIcon />, path: '/admin-classes' },
+    ];
+  } else if (role === 'teacher') {
+    menuItems = [
+      ...menuItems,
+      { text: 'Mes Cours', icon: <ClassIcon />, path: '/teacher-courses' },
+      { text: 'Messages', icon: <MessageIcon />, path: '/messages' },
+    ];
+  } else if (role === 'student') {
+    menuItems = [
+      ...menuItems,
+      { text: 'Mes Cours', icon: <ClassIcon />, path: '/student-courses' },
+      { text: 'Messages', icon: <MessageIcon />, path: '/messages' },
     ];
   }
 
-  // Clique sur un item du menu
   const handleItemClick = (path) => {
     navigate(path);
-    setMobileOpen(false); // Fermer le drawer mobile après la navigation
+    setMobileOpen(false);
   };
 
-  // Bouton burger (mobile)
   const handleToggleMobileDrawer = () => {
     setMobileOpen(!mobileOpen);
   };
 
-  // Déconnexion
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role'); // si tu stockes aussi le rôle
+    localStorage.clear();
     navigate('/');
   };
 
-  // Contenu de la sidebar
   const drawerContent = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Toolbar
@@ -83,10 +83,7 @@ const AppSidebar = ({ drawerWidth = 240 }) => {
           justifyContent: 'center',
         }}
       >
-        <Typography variant="h8" component="div">
-          {/* Titre ou logo */}
-
-        </Typography>
+        <Typography variant="h6">Gestion Scolaire</Typography>
       </Toolbar>
 
       <Divider />
@@ -97,12 +94,7 @@ const AppSidebar = ({ drawerWidth = 240 }) => {
             button
             key={item.text}
             onClick={() => handleItemClick(item.path)}
-            sx={{
-              '&:hover': {
-                backgroundColor: 'primary.light',
-                color: 'white',
-              },
-            }}
+            sx={{ '&:hover': { backgroundColor: 'primary.light', color: 'white' } }}
           >
             <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
@@ -112,18 +104,11 @@ const AppSidebar = ({ drawerWidth = 240 }) => {
 
       <Divider />
 
-      {/* Bouton de déconnexion en bas */}
       <Box sx={{ p: 2 }}>
         <ListItem
           button
           onClick={handleLogout}
-          sx={{
-            borderRadius: 1,
-            '&:hover': {
-              backgroundColor: 'error.main',
-              color: 'white',
-            },
-          }}
+          sx={{ borderRadius: 1, '&:hover': { backgroundColor: 'error.main', color: 'white' } }}
         >
           <ListItemIcon sx={{ minWidth: 40 }}>
             <LogoutIcon />
@@ -146,23 +131,17 @@ const AppSidebar = ({ drawerWidth = 240 }) => {
         <MenuIcon />
       </IconButton>
 
-      {/* Drawer permanent (desktop) */}
       <Drawer
         variant="permanent"
         sx={{
           display: { xs: 'none', sm: 'block' },
-          '& .MuiDrawer-paper': {
-            width: drawerWidth,
-            bgcolor: '#f5f5f5',
-            color: '#333',
-          },
+          '& .MuiDrawer-paper': { width: drawerWidth, bgcolor: '#f5f5f5', color: '#333' },
         }}
         open
       >
         {drawerContent}
       </Drawer>
 
-      {/* Drawer temporaire (mobile) */}
       <Drawer
         variant="temporary"
         open={mobileOpen}
@@ -170,11 +149,7 @@ const AppSidebar = ({ drawerWidth = 240 }) => {
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', sm: 'none' },
-          '& .MuiDrawer-paper': {
-            width: drawerWidth,
-            bgcolor: '#f5f5f5',
-            color: '#333',
-          },
+          '& .MuiDrawer-paper': { width: drawerWidth, bgcolor: '#f5f5f5', color: '#333' },
         }}
       >
         {drawerContent}

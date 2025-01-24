@@ -87,11 +87,6 @@ router.post('/stripe', async (req, res) => {
   try {
     const { email, amount } = req.body;
 
-    if (!process.env.FRONTEND_URL) {
-      throw new Error('FRONTEND_URL n\'est pas défini dans le fichier .env');
-    }
-
-    // Créer une session Stripe
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       customer_email: email,
@@ -99,10 +94,8 @@ router.post('/stripe', async (req, res) => {
         {
           price_data: {
             currency: 'usd',
-            product_data: {
-              name: 'Paiement des frais étudiants',
-            },
-            unit_amount: Math.round(amount * 100), // Montant en cents
+            product_data: { name: 'Frais de scolarité' },
+            unit_amount: Math.round(amount * 100),
           },
           quantity: 1,
         },
@@ -112,10 +105,21 @@ router.post('/stripe', async (req, res) => {
       cancel_url: `${process.env.FRONTEND_URL}/payment-failed`,
     });
 
+    // Enregistrer l'historique du paiement
+    const student = await Student.findOne({ email });
+    if (student) {
+      student.transactions.push({
+        amount,
+        method: 'Stripe',
+        transactionId: session.id,
+      });
+      await student.save();
+    }
+
     res.status(200).json({ url: session.url });
   } catch (error) {
     console.error('Erreur lors de la création de la session Stripe :', error);
-    res.status(500).json({ message: 'Erreur lors de la création de la session de paiement', error });
+    res.status(500).json({ message: 'Erreur serveur', error });
   }
 });
 

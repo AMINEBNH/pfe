@@ -1,0 +1,59 @@
+.admin-classes-container {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.class-form-card {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-item {
+    background-color: #f7f7f7;
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-item .MuiTextField-root {
+    margin-bottom: 16px;
+}
+
+.class-card {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.class-card .MuiTypography-root {
+    margin-bottom: 8px;
+}
+
+.class-card button {
+    margin-right: 8px;
+}
+
+.MuiButton-contained {
+    background-color: #007bff;
+    color: white;
+}
+
+.MuiButton-contained:hover {
+    background-color: #0056b3;
+}
+
+.MuiButton-outlined {
+    border-color: #007bff;
+    color: #007bff;
+}
+
+.MuiButton-outlined:hover {
+    border-color: #0056b3;
+    color: #0056b3;
+}

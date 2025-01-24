@@ -6,18 +6,14 @@ import './StudentDashboard.css';
 
 const StudentDashboard = () => {
   const [studentInfo, setStudentInfo] = useState({ firstName: '', lastName: '', photo: '' });
-  const [solde, setSolde] = useState(0);
+  const [price, setPrice] = useState(0); // Attribut `price` de la classe
   const [transactions, setTransactions] = useState([]);
+  const [schedule, setSchedule] = useState([]); // Planning de la classe
+  const [classDetails, setClassDetails] = useState({}); // Détails de la classe
+  const [events, setEvents] = useState([]);
+  const [showFullSchedule, setShowFullSchedule] = useState(false); // Basculer entre jour/semaine
   const [error, setError] = useState('');
   const navigate = useNavigate();
-
-  const [planning, setPlanning] = useState([
-    { time: '9h00', title: 'Cours de Mathématiques' },
-    { time: '11h00', title: 'TP de Physique' },
-    { time: '14h00', title: 'Cours d’Informatique' },
-  ]);
-
-  const [events, setEvents] = useState([]);
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -28,23 +24,28 @@ const StudentDashboard = () => {
           return;
         }
 
-        // Récupérer les informations de l'étudiant
+        // Appel à l'API pour récupérer les détails de l'étudiant et de sa classe
         const studentResponse = await axios.get('http://localhost:5000/api/students/details', {
           params: { email },
         });
 
-        if (studentResponse.data && studentResponse.data.student) {
-          const { firstName, lastName, photo } = studentResponse.data.student;
-          setStudentInfo({ firstName, lastName, photo });
+        if (studentResponse.data) {
+          const { student } = studentResponse.data;
+
+          // Mise à jour des états
+          setStudentInfo({
+            firstName: student.firstName,
+            lastName: student.lastName,
+            photo: student.photo,
+          });
+
+          if (student.class) {
+            setClassDetails(student.class); // Met à jour les détails de la classe
+            setPrice(student.class.price || 0); // Met à jour le prix de la classe
+            setSchedule(student.class.schedule || []); // Met à jour le planning
+          }
         }
 
-        // Récupérer le solde
-        const soldeResponse = await axios.get('http://localhost:5000/api/students/solde', {
-          params: { email },
-        });
-        setSolde(soldeResponse.data.solde);
-
-        // Récupérer les transactions
         const transactionsResponse = await axios.get('http://localhost:5000/api/payments/by-student', {
           params: { email },
         });
@@ -57,25 +58,6 @@ const StudentDashboard = () => {
 
     fetchStudentData();
   }, [navigate]);
-
-  const handlePaymentClick = async () => {
-    try {
-      const email = localStorage.getItem('email');
-      const response = await axios.post('http://localhost:5000/api/payments/stripe', {
-        email,
-        amount: solde,
-      });
-
-      if (response.data.url) {
-        window.location.href = response.data.url;
-      } else {
-        setError('Impossible de rediriger vers Stripe.');
-      }
-    } catch (error) {
-      console.error('Erreur lors de la création du paiement :', error);
-      setError('Erreur lors de la création du paiement. Veuillez réessayer.');
-    }
-  };
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -90,6 +72,32 @@ const StudentDashboard = () => {
 
     fetchEvents();
   }, []);
+
+  const handlePaymentClick = async () => {
+    try {
+      const email = localStorage.getItem('email');
+      const response = await axios.post('http://localhost:5000/api/payments/stripe', {
+        email,
+        amount: price,
+      });
+
+      if (response.data.url) {
+        window.location.href = response.data.url;
+      } else {
+        setError('Impossible de rediriger vers Stripe.');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la création du paiement :', error);
+      setError('Erreur lors de la création du paiement. Veuillez réessayer.');
+    }
+  };
+
+  const filteredSchedule = showFullSchedule
+    ? schedule // Planning complet
+    : schedule.filter(
+      (item) =>
+        item.day === new Date().toLocaleDateString('fr-FR', { weekday: 'long' }) // Planning du jour
+    );
 
   return (
     <div className="dashboard-container">
@@ -110,17 +118,17 @@ const StudentDashboard = () => {
 
         <h1>Tableau de bord Étudiant</h1>
         <p className="intro-text">
-          Bienvenue dans votre espace étudiant. Vous trouverez ici un aperçu de vos cours, votre solde,
+          Bienvenue dans votre espace étudiant. Vous trouverez ici un aperçu de vos cours, le prix de votre classe,
           vos messages récents, ainsi qu’un planning de la journée et quelques événements à venir.
         </p>
 
         {error && <p className="error-message">{error}</p>}
 
         <div className="dashboard-sections">
-          {/* SECTION SOLDE */}
+          {/* SECTION PRIX DE LA CLASSE */}
           <div className="dashboard-card balance-card">
-            <h2>Votre Solde</h2>
-            <p className="balance-amount">${solde.toFixed(2)}</p>
+            <h2>Solde du</h2>
+            <p className="balance-amount">${price.toFixed(2)}</p>
             <button className="action-button" onClick={handlePaymentClick}>
               Payer Maintenant
             </button>
@@ -143,54 +151,60 @@ const StudentDashboard = () => {
             )}
           </div>
 
-          {/* SECTION COURS */}
-          <div className="dashboard-card courses-card">
-            <h2>Vos Cours</h2>
-            <ul className="courses-list">
-              <li>Mathématiques</li>
-              <li>Sciences</li>
-              <li>Histoire</li>
-              <li>Informatique</li>
-            </ul>
-            <button className="action-button secondary" onClick={() => navigate('/courses')}>
-              Voir tous les cours
-            </button>
-          </div>
+          {/* SECTION CLASSE */}
+          <div className="dashboard-card class-card">
+            <h2>Ma Classe</h2>
+            <p>
+              <strong>Nom :</strong> {classDetails.name || 'N/A'} <br />
+              <strong>Niveau :</strong> {classDetails.level || 'N/A'}
+            </p>
 
-          {/* SECTION MESSAGES */}
-          <div className="dashboard-card messages-card">
-            <h2>Messages</h2>
-            <div className="messages-list">
-              <p>
-                <strong>Prof. Dupont :</strong> Rendez-vous demain à 10h.
-              </p>
-              <p>
-                <strong>Administration :</strong> N'oubliez pas de payer vos frais avant le 15.
-              </p>
-              <p>
-                <strong>Prof. Martin :</strong> Nouveaux exercices ajoutés sur la plateforme.
-              </p>
-            </div>
-            <button className="action-button info" onClick={() => navigate('/messages')}>
-              Voir tous les messages
-            </button>
+            {/* Enseignants */}
+            <h3>Enseignants</h3>
+            <ul>
+              {classDetails.teachers && classDetails.teachers.length > 0 ? (
+                classDetails.teachers.map((teacher) => (
+                  <li key={teacher._id}>{teacher.name}</li>
+                ))
+              ) : (
+                <li>Aucun enseignant disponible</li>
+              )}
+            </ul>
+
+            {/* Camarades */}
+            <h3>Camarades</h3>
+            <ul>
+              {classDetails.students && classDetails.students.length > 0 ? (
+                classDetails.students.map((student) => (
+                  <li key={student._id}>
+                    {student.firstName} {student.lastName}
+                  </li>
+                ))
+              ) : (
+                <li>Aucun camarade disponible</li>
+              )}
+            </ul>
           </div>
 
           {/* SECTION PLANNING */}
           <div className="dashboard-card planning-card">
-            <h2>Planning du jour</h2>
+            <h2>{showFullSchedule ? 'Planning de la semaine' : 'Planning du jour'}</h2>
             <ul className="planning-list">
-              {planning.map((item, index) => (
-                <li key={index}>
-                  <strong>{item.time} :</strong> {item.title}
-                </li>
-              ))}
+              {filteredSchedule.length > 0 ? (
+                filteredSchedule.map((item, index) => (
+                  <li key={index}>
+                    <strong>{item.day} :</strong> {item.time} - {item.course || 'Cours inconnu'}
+                  </li>
+                ))
+              ) : (
+                <p>Aucun cours disponible.</p>
+              )}
             </ul>
             <button
               className="action-button secondary"
-              onClick={() => alert('Planning complet à venir...')}
+              onClick={() => setShowFullSchedule(!showFullSchedule)}
             >
-              Voir le planning complet
+              {showFullSchedule ? 'Voir le planning du jour' : 'Voir le planning complet'}
             </button>
           </div>
 

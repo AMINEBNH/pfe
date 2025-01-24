@@ -9,7 +9,7 @@ import LoginStudent from './pages/LoginStudent';
 import LoginTeacher from './pages/LoginTeacher';
 import LoginAdmin from './pages/LoginAdmin';
 import SignupStudent from './pages/Signup';
-import CompleteStudentProfile from './pages/CompleteStudentProfile'; // Import de la page
+import CompleteStudentProfile from './pages/CompleteStudentProfile';
 
 // Pages protégées
 import StudentDashboard from './pages/StudentDashboard';
@@ -19,8 +19,9 @@ import Messages from './pages/Messages';
 import MessageDetails from './pages/MessageDetails';
 import Courses from './pages/Courses';
 import CourseDetails from './pages/CourseDetails';
-import AdminStudents from './pages/AdminStudents'; // Importer le composant AdminStudents
-import AdminTeachers from './pages/AdminTeachers'; // Importer le composant AdminTeachers
+import AdminStudents from './pages/AdminStudents';
+import AdminTeachers from './pages/AdminTeachers';
+import AdminClasses from './pages/AdminClasses';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailed from './pages/PaymentFailed';
 
@@ -34,7 +35,6 @@ import Footer from './components/Footer';
 import './styles/App.css';
 
 const App = () => {
-  // Largeur de la sidebar
   const drawerWidth = 240;
 
   return (
@@ -52,11 +52,10 @@ const App = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          ml: { sm: `${drawerWidth}px` }, // margin-left = drawerWidth en desktop
+          ml: { sm: `${drawerWidth}px` },
           p: 3,
         }}
       >
-        {/* Pour éviter que le contenu passe sous l'AppBar */}
         <Toolbar />
 
         <Routes>
@@ -67,7 +66,7 @@ const App = () => {
           <Route path="/login-teacher" element={<LoginTeacher />} />
           <Route path="/login-admin" element={<LoginAdmin />} />
           <Route path="/signup-student" element={<SignupStudent />} />
-          <Route path="/complete-student-profile" element={<CompleteStudentProfile />} /> {/* Nouvelle route */}
+          <Route path="/complete-student-profile" element={<CompleteStudentProfile />} />
 
           {/* Routes protégées */}
           <Route
@@ -94,8 +93,6 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-
-          {/* Messages */}
           <Route
             path="/messages"
             element={
@@ -112,8 +109,6 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-
-          {/* Cours */}
           <Route
             path="/courses"
             element={
@@ -130,8 +125,6 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-
-          {/* Routes Admin supplémentaires */}
           <Route
             path="/admin-students"
             element={
@@ -148,13 +141,16 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-
-          {/* Routes de paiement */}
+          <Route
+            path="/admin-classes"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminClasses />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-failed" element={<PaymentFailed />} />
-
-          {/* Route 404 éventuelle */}
-          {/* <Route path="*" element={<NotFound />} /> */}
         </Routes>
       </Box>
 

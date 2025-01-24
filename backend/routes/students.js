@@ -112,6 +112,7 @@ router.post('/check-or-create', async (req, res) => {
 });
 
 // 4) GET /api/students/details => Récupérer les informations d'un étudiant
+// GET /api/students/details
 router.get('/details', async (req, res) => {
   try {
     const { email } = req.query;
@@ -120,7 +121,15 @@ router.get('/details', async (req, res) => {
       return res.status(400).json({ message: 'Email manquant dans la requête.' });
     }
 
-    const student = await Student.findOne({ email });
+    const student = await Student.findOne({ email })
+      .populate({
+        path: 'class',
+        populate: [
+          { path: 'teachers', select: 'name' },
+          { path: 'students', select: 'firstName lastName' },
+        ],
+      });
+
     if (!student) {
       return res.status(404).json({ message: 'Étudiant introuvable.' });
     }
@@ -128,7 +137,7 @@ router.get('/details', async (req, res) => {
     res.status(200).json({ student });
   } catch (error) {
     console.error('Erreur lors de la récupération des informations de l\'étudiant :', error);
-    res.status(500).json({ message: 'Erreur serveur', error: error.message });
+    res.status(500).json({ message: 'Erreur serveur.', error: error.message });
   }
 });
 
@@ -174,5 +183,43 @@ router.get('/solde', async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 });
+
+
+// GET /api/students/class-details
+router.get('/class-details', async (req, res) => {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email manquant dans la requête.' });
+    }
+
+    // Trouver l'étudiant
+    const student = await Student.findOne({ email }).populate('class');
+    if (!student) {
+      return res.status(404).json({ message: 'Étudiant introuvable.' });
+    }
+
+    // Vérifiez si l'étudiant est dans une classe
+    if (!student.class) {
+      return res.status(404).json({ message: 'L’étudiant n’est inscrit à aucune classe.' });
+    }
+
+    // Récupérer les détails de la classe avec les enseignants et les camarades
+    const classDetails = await Class.findById(student.class._id)
+      .populate('teachers', 'name') // Charger les enseignants (nom)
+      .populate('students', 'firstName lastName') // Charger les camarades (nom, prénom)
+      .populate('courses', 'name'); // Charger les cours (nom)
+
+    res.status(200).json({
+      student,
+      classDetails,
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des détails de la classe :', error);
+    res.status(500).json({ message: 'Erreur serveur.', error: error.message });
+  }
+});
+
 
 module.exports = router;
