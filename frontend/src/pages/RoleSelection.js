@@ -13,7 +13,7 @@ const RoleSelection = () => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'space-evenly', // Uniforme verticalement
+        justifyContent: 'space-evenly',
         background: 'linear-gradient(to bottom, #f7f9fc, #eaf1f8)',
         padding: '2rem',
       }}
@@ -22,7 +22,7 @@ const RoleSelection = () => {
       <Box
         sx={{
           textAlign: 'center',
-          marginBottom: '1.5rem', // Réduction de l'espace en bas
+          marginBottom: '1.5rem',
         }}
       >
         <Typography variant="h4" fontWeight="bold">
@@ -63,7 +63,7 @@ const RoleSelection = () => {
                   width: '100%',
                   maxWidth: '220px',
                   height: '200px',
-                  objectFit: 'contain', // Garde l'image entière sans la couper
+                  objectFit: 'contain',
                 }}
               />
             </Box>
@@ -137,6 +137,57 @@ const RoleSelection = () => {
           </Card>
         </Grid>
 
+        {/* Carte Parent */}
+        <Grid item xs={12} sm={6} md={4}>
+          <Card
+            sx={{
+              borderRadius: '12px',
+              boxShadow: '0px 6px 12px rgba(0, 0, 0, 0.1)',
+              overflow: 'hidden',
+              '&:hover': {
+                transform: 'scale(1.04)',
+                transition: 'transform 0.3s',
+              },
+            }}
+          >
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                backgroundColor: '#f0f8ff',
+                padding: '1rem',
+              }}
+            >
+              <img
+                src="/images/parent-cartoon.png"
+                alt="Parent"
+                style={{
+                  width: '100%',
+                  maxWidth: '220px',
+                  height: '200px',
+                  objectFit: 'contain',
+                }}
+              />
+            </Box>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h6" fontWeight="bold">
+                Parent
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Connectez-vous pour suivre les activités de vos enfants.
+              </Typography>
+              <Button
+                variant="contained"
+                color="success"
+                sx={{ mt: 2, textTransform: 'none' }}
+                onClick={() => navigate('/login-parent')}
+              >
+                Se connecter
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+
         {/* Carte Administrateur */}
         <Grid item xs={12} sm={6} md={4}>
           <Card
@@ -178,7 +229,7 @@ const RoleSelection = () => {
               </Typography>
               <Button
                 variant="contained"
-                color="success"
+                color="warning"
                 sx={{ mt: 2, textTransform: 'none' }}
                 onClick={() => navigate('/login-admin')}
               >

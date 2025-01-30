@@ -1,0 +1,39 @@
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.dashboard-content {
+    flex-grow: 1;
+    padding: 20px;
+    margin-left: 240px;
+    /* Ajustez selon la largeur de votre sidebar */
+}
+
+.parent-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.parent-name {
+    margin-left: 10px;
+}
+
+.dashboard-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.dashboard-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.error-message {
+    color: red;
+    margin-bottom: 20px;
+}

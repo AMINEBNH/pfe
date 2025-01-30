@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import RoleSelection from './pages/RoleSelection';
 import LoginStudent from './pages/LoginStudent';
 import LoginTeacher from './pages/LoginTeacher';
+import LoginParent from './pages/LoginParent'; // Nouveau
 import LoginAdmin from './pages/LoginAdmin';
 import SignupStudent from './pages/Signup';
 import CompleteStudentProfile from './pages/CompleteStudentProfile';
@@ -14,6 +15,7 @@ import CompleteStudentProfile from './pages/CompleteStudentProfile';
 // Pages protégées
 import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
+import ParentDashboard from './pages/ParentDashboard'; // Nouveau
 import AdminDashboard from './pages/AdminDashboard';
 import Messages from './pages/Messages';
 import MessageDetails from './pages/MessageDetails';
@@ -64,6 +66,7 @@ const App = () => {
           <Route path="/role-selection" element={<RoleSelection />} />
           <Route path="/login-student" element={<LoginStudent />} />
           <Route path="/login-teacher" element={<LoginTeacher />} />
+          <Route path="/login-parent" element={<LoginParent />} /> {/* Nouveau */}
           <Route path="/login-admin" element={<LoginAdmin />} />
           <Route path="/signup-student" element={<SignupStudent />} />
           <Route path="/complete-student-profile" element={<CompleteStudentProfile />} />
@@ -85,6 +88,14 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/parent-dashboard"
+            element={
+              <ProtectedRoute requiredRole="parent">
+                <ParentDashboard />
+              </ProtectedRoute>
+            }
+          /> {/* Nouveau */}
           <Route
             path="/admin-dashboard"
             element={
