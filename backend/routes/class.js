@@ -87,4 +87,19 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+
+// Récupérer les classes d'un enseignant
+router.get('/teacher/:teacherId', async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    const classes = await Class.find({ teachers: teacherId })
+      .populate('students', 'firstName lastName')
+      .populate('teachers', 'name image')
+      .populate('courses', 'name description');
+    res.status(200).json(classes);
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur de récupération des classes', error });
+  }
+});
+
 module.exports = router;

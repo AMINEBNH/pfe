@@ -12,13 +12,24 @@ const Courses = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await fetch('http://localhost:5000/courses/all');
+        const role = localStorage.getItem('role'); // Récupérer le rôle
+        const userId = localStorage.getItem('userId'); // Récupérer l'ID de l'utilisateur
+        const studentId = localStorage.getItem('studentId'); // Récupérer l'ID de l'étudiant assigné (pour les parents)
+
+        const response = await fetch(
+          `http://localhost:5000/courses?role=${role}&userId=${userId}&studentId=${studentId}`
+        );
+        console.log('Réponse du backend :', response);
+
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération des cours');
         }
+
         const data = await response.json();
+        console.log('Données reçues :', data);
         setCourses(data);
       } catch (error) {
+        console.error('Erreur dans fetchCourses :', error);
         setError("Impossible de récupérer les cours. Veuillez réessayer plus tard.");
       } finally {
         setLoading(false);
@@ -26,7 +37,7 @@ const Courses = () => {
     };
 
     fetchCourses();
-  }, []);
+  }, [navigate]);
 
   if (loading) {
     return (
@@ -54,13 +65,8 @@ const Courses = () => {
       ) : (
         <ul className="courses-list">
           {courses.map((course) => (
-            <li
-              key={course._id}
-              className="course-item"
-            >
-              {/* Icône livre ou autre */}
+            <li key={course._id} className="course-item">
               <div className="course-icon">📚</div>
-
               <div className="course-content">
                 <div className="course-name">{course.name}</div>
                 <div className="course-teacher">
@@ -70,8 +76,6 @@ const Courses = () => {
                     : course.teacher || 'Non spécifié'}
                 </div>
               </div>
-
-              {/* Image prof si on a course.teacher.image */}
               {course.teacher && course.teacher.image && (
                 <img
                   src={course.teacher.image}
@@ -80,7 +84,6 @@ const Courses = () => {
                   style={{ width: 50, height: 50, borderRadius: '50%', marginLeft: '1rem' }}
                 />
               )}
-
               <button
                 className="course-button"
                 onClick={() => navigate(`/courses/${course._id}`)}

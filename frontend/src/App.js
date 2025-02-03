@@ -7,15 +7,17 @@ import Home from './pages/Home';
 import RoleSelection from './pages/RoleSelection';
 import LoginStudent from './pages/LoginStudent';
 import LoginTeacher from './pages/LoginTeacher';
-import LoginParent from './pages/LoginParent'; // Nouveau
+import LoginParent from './pages/LoginParent';
 import LoginAdmin from './pages/LoginAdmin';
 import SignupStudent from './pages/Signup';
 import CompleteStudentProfile from './pages/CompleteStudentProfile';
+import CompleteParentProfile from './pages/CompleteParentProfile';
+import EditParentProfile from './pages/EditParentProfile'; // Nouveau
 
 // Pages protégées
 import StudentDashboard from './pages/StudentDashboard';
 import TeacherDashboard from './pages/TeacherDashboard';
-import ParentDashboard from './pages/ParentDashboard'; // Nouveau
+import ParentDashboard from './pages/ParentDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Messages from './pages/Messages';
 import MessageDetails from './pages/MessageDetails';
@@ -66,10 +68,12 @@ const App = () => {
           <Route path="/role-selection" element={<RoleSelection />} />
           <Route path="/login-student" element={<LoginStudent />} />
           <Route path="/login-teacher" element={<LoginTeacher />} />
-          <Route path="/login-parent" element={<LoginParent />} /> {/* Nouveau */}
+          <Route path="/login-parent" element={<LoginParent />} />
           <Route path="/login-admin" element={<LoginAdmin />} />
           <Route path="/signup-student" element={<SignupStudent />} />
           <Route path="/complete-student-profile" element={<CompleteStudentProfile />} />
+          <Route path="/complete-parent-profile" element={<CompleteParentProfile />} />
+          <Route path="/edit-parent-profile" element={<EditParentProfile />} /> {/* Nouveau */}
 
           {/* Routes protégées */}
           <Route
@@ -95,7 +99,7 @@ const App = () => {
                 <ParentDashboard />
               </ProtectedRoute>
             }
-          /> {/* Nouveau */}
+          />
           <Route
             path="/admin-dashboard"
             element={

@@ -2,11 +2,21 @@
   display: flex;
   min-height: 100vh;
   background-color: #f7f9fb;
+  flex-direction: row;
+  overflow: auto;
+  /* Permet le défilement si le contenu dépasse */
 }
 
 .dashboard-content {
   flex: 1;
   padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  /* Disposition verticale des cartes */
+  gap: 2rem;
+  overflow-y: auto;
+  height: auto;
+  /* S'adapte à la hauteur du contenu */
 }
 
 .card {
@@ -14,15 +24,73 @@
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 600px;
+  /* Limite la largeur des cartes pour un meilleur rendu */
+  margin: 0 auto;
+  /* Centrage horizontal */
 }
 
 .form-control {
   margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-control input,
+.form-control textarea,
+.form-control select {
+  padding: 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #fff;
+  color: #333;
+  outline: none;
+}
+
+.form-control input:focus,
+.form-control textarea:focus,
+.form-control select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
 .button-container {
-  margin-top: 2rem;
+  margin-top: 1rem;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.button-container button {
+  padding: 0.8rem 1.5rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.button-container button:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+  /* Effet de zoom au survol */
+}
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    padding: 1rem;
+  }
+
+  .card {
+    padding: 1.5rem;
+    max-width: 100%;
+  }
 }

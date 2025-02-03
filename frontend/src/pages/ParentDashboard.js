@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/AppSidebar';
 import axios from 'axios';
+import { FaEdit } from 'react-icons/fa';
 import './ParentDashboard.css';
 
 const ParentDashboard = () => {
-    const [parentInfo, setParentInfo] = useState({ firstName: '', lastName: '', children: [] });
-    const [childrenDetails, setChildrenDetails] = useState([]);
+    const [parentInfo, setParentInfo] = useState({ firstName: '', lastName: '', email: '', phoneNumber: '' });
+    const [studentInfo, setStudentInfo] = useState(null);
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchParentData = async () => {
+            setLoading(true);
             try {
                 const email = localStorage.getItem('email');
                 if (!email) {
@@ -19,78 +21,114 @@ const ParentDashboard = () => {
                     return;
                 }
 
-                // Récupérer les informations du parent
-                const parentResponse = await axios.get('http://localhost:5000/api/parents/details', {
-                    params: { email },
-                });
+                const response = await axios.get('http://localhost:5000/api/parents/profile', { params: { email } });
 
-                if (parentResponse.data) {
-                    const { parent } = parentResponse.data;
+                if (response.data) {
                     setParentInfo({
-                        firstName: parent.firstName,
-                        lastName: parent.lastName,
-                        children: parent.children,
+                        firstName: response.data.firstName || '',
+                        lastName: response.data.lastName || '',
+                        email: response.data.email || '',
+                        phoneNumber: response.data.phoneNumber || '',
                     });
+                }
 
-                    // Récupérer les détails des enfants si des enfants sont assignés
-                    if (parent.children.length > 0) {
-                        const childrenDetailsResponse = await axios.post('http://localhost:5000/api/students/details-by-ids', {
-                            ids: parent.children,
-                        });
-                        setChildrenDetails(childrenDetailsResponse.data);
-                    }
+                const dashboardResponse = await axios.get('http://localhost:5000/api/parents/dashboard', { params: { email } });
+
+                if (dashboardResponse.data.student) {
+                    setStudentInfo({
+                        firstName: dashboardResponse.data.student.firstName || '',
+                        lastName: dashboardResponse.data.student.lastName || '',
+                        class: dashboardResponse.data.student.class || { name: '', price: 0, schedule: [] },
+                    });
                 }
             } catch (error) {
                 console.error('Erreur lors de la récupération des données :', error);
                 setError('Impossible de récupérer les données. Veuillez réessayer plus tard.');
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchParentData();
     }, [navigate]);
 
+    const handleEditProfile = () => {
+        navigate('/edit-parent-profile');
+    };
+
+    const handlePaymentClick = async () => {
+        setError('');
+        try {
+            const email = localStorage.getItem('email');
+            const response = await axios.post('http://localhost:5000/api/payments/stripe', {
+                email,
+                amount: studentInfo.class.price,
+            });
+
+            if (response.data.url) {
+                window.location.href = response.data.url;
+            } else {
+                setError('Impossible de rediriger vers Stripe.');
+            }
+        } catch (error) {
+            console.error('Erreur lors de la création du paiement :', error);
+            setError('Erreur lors de la création du paiement. Veuillez réessayer.');
+        }
+    };
+
+    const formatSchedule = (schedule) => {
+        if (!schedule || !Array.isArray(schedule)) return 'Aucun planning disponible';
+        return schedule.map((item, index) => (
+            <div key={index} className="schedule-item">
+                <p><strong>Jour :</strong> {item.day}</p>
+                <p><strong>Heure :</strong> {item.time}</p>
+                <p><strong>Cours :</strong> {item.course}</p>
+            </div>
+        ));
+    };
+
+    if (loading) {
+        return <div className="loading">Chargement en cours...</div>;
+    }
+
     return (
         <div className="dashboard-container">
-            <Sidebar role="parent" />
-
             <div className="dashboard-content">
-                <div className="parent-header">
-                    <h2 className="parent-name">
-                        Bonjour, {parentInfo.firstName} {parentInfo.lastName}
-                    </h2>
+                <div className="profile-header">
+                    <h2>Bonjour, {parentInfo.firstName} {parentInfo.lastName}</h2>
+                    <button className="edit-profile-button" onClick={handleEditProfile}>
+                        <FaEdit /> Modifier le profil
+                    </button>
                 </div>
-
-                <h1>Tableau de bord Parent</h1>
-                <p className="intro-text">
-                    Bienvenue dans votre espace parent. Vous trouverez ici un aperçu des activités de vos enfants.
-                </p>
 
                 {error && <p className="error-message">{error}</p>}
 
-                <div className="dashboard-sections">
-                    {childrenDetails.length > 0 ? (
-                        childrenDetails.map((child) => (
-                            <div key={child._id} className="dashboard-card">
-                                <h2>{child.firstName} {child.lastName}</h2>
-                                <p><strong>Classe :</strong> {child.class?.name || 'N/A'}</p>
-                                <p><strong>Enseignants :</strong> {child.class?.teachers?.map(t => t.name).join(', ') || 'N/A'}</p>
-                                <p><strong>Planning :</strong></p>
-                                <ul>
-                                    {child.class?.schedule?.map((item, index) => (
-                                        <li key={index}>
-                                            <strong>{item.day} :</strong> {item.time} - {item.course || 'Cours inconnu'}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))
-                    ) : (
-                        <div className="dashboard-card">
-                            <h2>Aucun enfant assigné</h2>
-                            <p>Veuillez contacter l'administrateur pour assigner un enfant à votre compte.</p>
-                        </div>
-                    )}
+                <div className="card profile-info">
+                    <h3>Informations du Profil</h3>
+                    <p><strong>Email :</strong> {parentInfo.email}</p>
+                    <p><strong>Téléphone :</strong> {parentInfo.phoneNumber}</p>
                 </div>
+
+                {studentInfo ? (
+                    <div className="card student-info">
+                        <h3>Informations de l'Étudiant</h3>
+                        <p><strong>Nom :</strong> {studentInfo.firstName} {studentInfo.lastName}</p>
+                        <p><strong>Classe :</strong> {studentInfo.class.name}</p>
+                        <p><strong>Prix :</strong> ${studentInfo.class.price}</p>
+
+                        <h4>Planning des Cours</h4>
+                        <div className="schedule-container">{formatSchedule(studentInfo.class.schedule)}</div>
+
+                        <button className="action-button" onClick={handlePaymentClick}>
+                            Payer Maintenant
+                        </button>
+                    </div>
+                ) : (
+                    <div className="no-student-assigned card">
+                        <h3>Aucun Enfant Assigné</h3>
+                        <p>Veuillez contacter l'administration pour l'assignation d'un enfant.</p>
+                    </div>
+                )}
             </div>
         </div>
     );

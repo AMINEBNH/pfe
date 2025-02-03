@@ -1,0 +1,57 @@
+digraph Database_Schema_Updated {
+	fontsize=10 rankdir=TB
+	Classes [label="Classes
+- name
+- level
+- price
+- teachers[]
+- students[]
+- courses[]
+- schedule[]" shape=box]
+	Courses [label="Courses
+- name
+- teacher
+- hours
+- documents[]" shape=box]
+	Events [label="Events
+- day
+- time
+- description
+- image" shape=box]
+	Payments [label="Payments
+- student
+- amount
+- date
+- status" shape=box]
+	Students [label="Students
+- email
+- firstName
+- lastName
+- dateOfBirth
+- class
+- solde
+- transactions[]" shape=box]
+	Teachers [label="Teachers
+- name
+- subject
+- email
+- password
+- image" shape=box]
+	Users [label="Users
+- email
+- password
+- role" shape=box]
+	Parents [label="Parents
+- email
+- firstName
+- lastName
+- children[]
+- phoneNumber" shape=box]
+	Classes -> Teachers [label=references]
+	Classes -> Students [label=references]
+	Classes -> Courses [label=references]
+	Courses -> Teachers [label=references]
+	Payments -> Students [label=references]
+	Students -> Classes [label=references]
+	Parents -> Students [label=references]
+}

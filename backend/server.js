@@ -2,6 +2,21 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const path = require('path');
+const multer = require('multer');
+
+
+// Configuration de multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+
+const upload = multer({ storage });
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -23,8 +38,9 @@ const teacherRoutes = require('./routes/teachers');
 const courseRoutes = require('./routes/courses');
 const studentRoutes = require('./routes/students');
 const eventsRoutes = require('./routes/events');
-const classRoutes = require('./routes/class'); // Import du routeur des classes
+const classRoutes = require('./routes/class');
 const paymentRoutes = require('./routes/payments');
+const parentRoutes = require('./routes/parents');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -37,11 +53,12 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/teachers', teacherRoutes);
-app.use('/courses', courseRoutes);
+app.use('/api/courses', courseRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/payments', paymentRoutes);
-
+app.use('/api/parents', parentRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Gestion des erreurs générales
 app.use((req, res, next) => {
   res.status(404).json({ message: 'Route non trouvée' });
@@ -54,7 +71,7 @@ app.use((err, req, res, next) => {
 
 // Connexion à MongoDB
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('✅ Connecté à MongoDB'))
   .catch((err) => console.error('❌ Erreur de connexion MongoDB :', err));
 

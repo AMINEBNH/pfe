@@ -1,39 +1,107 @@
-.dashboard-container {
-    display: flex;
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #74ebd5, #acb6e5);
     min-height: 100vh;
 }
 
-.dashboard-content {
-    flex-grow: 1;
+.dashboard-container {
+    display: flex;
+    justify-content: center;
     padding: 20px;
-    margin-left: 240px;
-    /* Ajustez selon la largeur de votre sidebar */
 }
 
-.parent-header {
+.dashboard-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    max-width: 600px;
+    width: 100%;
+    animation: fadeIn 1s ease-in-out;
+}
+
+.profile-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
 }
 
-.parent-name {
-    margin-left: 10px;
-}
-
-.dashboard-sections {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-}
-
-.dashboard-card {
-    background-color: #fff;
+.edit-profile-button {
+    background-color: #4a90e2;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.edit-profile-button:hover {
+    background-color: #357ab8;
+}
+
+.card {
+    background: #f9f9f9;
     padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.schedule-container {
+    background: #eef7ff;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.schedule-item {
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-button {
+    background-color: #34c759;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.action-button:hover {
+    background-color: #28a745;
+    transform: scale(1.05);
 }
 
 .error-message {
     color: red;
-    margin-bottom: 20px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.loading {
+    color: #fff;
+    font-size: 24px;
+    text-align: center;
+    padding: 50px;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

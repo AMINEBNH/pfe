@@ -8,7 +8,11 @@ const courseSchema = new mongoose.Schema({
     ref: 'Teacher'
   },
   hours: { type: Number },
-  documents: [String]
+  documents: [{
+    name: String,
+    url: String,
+    uploadedAt: { type: Date, default: Date.now }
+  }]
 });
 
 module.exports = mongoose.model('Course', courseSchema);

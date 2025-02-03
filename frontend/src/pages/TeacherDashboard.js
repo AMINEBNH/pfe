@@ -1,75 +1,121 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Sidebar from '../components/AppSidebar';
 import {
   Container,
   Typography,
   Avatar,
-  TextField,
+  Card,
+  CardContent,
+  Chip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  ListItem,
+  ListItemText,
   Button,
+  Input,
+  CircularProgress,
   Box,
-  CircularProgress
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 
 const TeacherDashboard = () => {
   const [teacher, setTeacher] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    subject: '',
-    email: localStorage.getItem('email') || '',
-    password: '',
-    image: ''
-  });
+  const [classes, setClasses] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState({}); // Gestion des fichiers par cours
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const fetchTeacher = async () => {
+  // Fonction pour récupérer les données de l'enseignant et ses classes
+  const fetchData = async () => {
     const email = localStorage.getItem('email');
-    console.log("Recherche de l'enseignant avec l'email:", email);
-    if (!email) {
-      setLoading(false);
-      return;
-    }
+    if (!email) return;
+
     try {
-      const response = await axios.get(`http://localhost:5000/api/teachers/by-email?email=${encodeURIComponent(email)}`);
-      console.log("Enseignant récupéré :", response.data);
-      setTeacher(response.data);
+      // Récupération des infos de l'enseignant
+      const teacherRes = await axios.get(`http://localhost:5000/api/teachers/by-email?email=${email}`);
+      setTeacher(teacherRes.data);
+
+      // Récupération des classes associées
+      const classesRes = await axios.get(`http://localhost:5000/api/classes/teacher/${teacherRes.data._id}`);
+      setClasses(classesRes.data);
     } catch (error) {
-      if (error.response && error.response.status === 404) {
-        console.log("Aucun enseignant trouvé pour cet email.");
-        setTeacher(null);
-      } else {
-        console.error("Erreur lors de la récupération de l'enseignant :", error);
-      }
-    } finally {
-      setLoading(false);
+      console.error('Erreur de récupération des données:', error);
+      setError('Erreur lors de la récupération des données. Veuillez réessayer.');
     }
   };
 
   useEffect(() => {
-    fetchTeacher();
+    fetchData();
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  // Gestion du changement de fichier pour chaque cours
+  const handleFileChange = (courseId, file) => {
+    setSelectedFiles((prev) => ({
+      ...prev,
+      [courseId]: file,
+    }));
   };
 
-  const handleCreateTeacher = async (e) => {
-    e.preventDefault();
-    setCreating(true);
+  // Gestion du téléchargement de fichier
+  const handleFileUpload = async (courseId) => {
+    const file = selectedFiles[courseId];
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+
     try {
-      const response = await axios.post('http://localhost:5000/api/teachers/register', formData);
-      setTeacher(response.data.teacher);
+      const formData = new FormData();
+      formData.append('document', file);
+
+      const response = await axios.post(
+        `http://localhost:5000/api/courses/${courseId}/documents`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      // Mettre à jour l'état local avec le nouveau document
+      setClasses((prev) =>
+        prev.map((cls) => {
+          if (cls.courses.some((c) => c._id === courseId)) {
+            return {
+              ...cls,
+              courses: cls.courses.map((course) => {
+                if (course._id === courseId) {
+                  return {
+                    ...course,
+                    documents: [...(course.documents || []), response.data.document],
+                  };
+                }
+                return course;
+              }),
+            };
+          }
+          return cls;
+        })
+      );
+
+      // Réinitialiser le fichier sélectionné pour ce cours
+      setSelectedFiles((prev) => ({
+        ...prev,
+        [courseId]: null,
+      }));
     } catch (error) {
-      console.error("Erreur lors de la création de l'enseignant :", error);
-      alert("Une erreur est survenue lors de la création de l'enseignant.");
+      console.error('Erreur de téléchargement:', error);
+      setError('Erreur lors du téléchargement du fichier. Veuillez réessayer.');
     } finally {
-      setCreating(false);
+      setUploading(false);
     }
   };
 
-  if (loading) {
+  if (!teacher) {
     return (
       <Container style={{ textAlign: 'center', marginTop: '2rem' }}>
         <CircularProgress />
@@ -78,89 +124,146 @@ const TeacherDashboard = () => {
   }
 
   return (
-    <div className="d-flex">
-      <Sidebar role="teacher" />
-      <div className="content" style={{ padding: '2rem', flex: 1 }}>
-        {!teacher ? (
-          <Box component="form" onSubmit={handleCreateTeacher} sx={{ maxWidth: 400, mx: 'auto' }}>
-            <Typography variant="h5" gutterBottom>
-              Complétez vos informations
-            </Typography>
-            <TextField
-              label="Nom"
-              name="name"
-              fullWidth
-              margin="normal"
-              value={formData.name}
-              onChange={handleChange}
-              required
-            />
-            <TextField
-              label="Matière"
-              name="subject"
-              fullWidth
-              margin="normal"
-              value={formData.subject}
-              onChange={handleChange}
-              required
-            />
-            <TextField
-              label="Email"
-              name="email"
-              fullWidth
-              margin="normal"
-              value={formData.email}
-              onChange={handleChange}
-              disabled
-            />
-            <TextField
-              label="Mot de passe"
-              name="password"
-              type="password"
-              fullWidth
-              margin="normal"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-            <TextField
-              label="URL de l'image"
-              name="image"
-              fullWidth
-              margin="normal"
-              value={formData.image}
-              onChange={handleChange}
-            />
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              fullWidth
-              disabled={creating}
-              sx={{ mt: 2 }}
-            >
-              {creating ? "Création en cours..." : "Créer mon profil"}
-            </Button>
-          </Box>
-        ) : (
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      {/* Sidebar existante */}
+
+      <div style={{ flex: 1, padding: '2rem', backgroundColor: '#f5f5f5' }}>
+        {/* En-tête avec les informations de l'enseignant */}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem' }}>
+          <Avatar src={teacher.image} sx={{ width: 80, height: 80, mr: 2 }} />
           <div>
-            <Box display="flex" alignItems="center" mb={4}>
-              <Avatar
-                src={teacher.image || '/default-teacher.jpg'}
-                alt={teacher.name}
-                sx={{ width: 80, height: 80, mr: 2 }}
-              />
-              <Typography variant="h4">
-                Bienvenue, {teacher.name}
-              </Typography>
-            </Box>
-            <Typography variant="h6">Vos classes :</Typography>
-            <ul>
-              <li>Classe de Mathématiques</li>
-              <li>Classe de Physique</li>
-              {/* Ajoutez ici la liste des classes depuis vos données */}
-            </ul>
+            <Typography variant="h4">{teacher.name}</Typography>
+            <Typography variant="subtitle1" color="textSecondary">
+              {teacher.subject}
+            </Typography>
           </div>
+        </div>
+
+        {/* Liste des classes */}
+        <Typography variant="h5" gutterBottom>
+          Mes Classes
+        </Typography>
+
+        <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+          {classes.map((cls) => (
+            <Card key={cls._id} sx={{ borderRadius: '10px', boxShadow: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  {cls.name} - {cls.level}
+                </Typography>
+
+                {/* Liste des élèves */}
+                <div style={{ marginBottom: '1rem' }}>
+                  <Typography variant="body2" color="textSecondary">
+                    Élèves inscrits:
+                  </Typography>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {cls.students.map((student) => (
+                      <Chip
+                        key={student._id}
+                        label={`${student.firstName} ${student.lastName}`}
+                        size="small"
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Liste des cours */}
+                <Typography variant="body2" color="textSecondary" gutterBottom>
+                  Cours dispensés:
+                </Typography>
+
+                {cls.courses.map((course) => (
+                  <Accordion key={course._id} sx={{ mb: 1 }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography>{course.name}</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Typography variant="body2" paragraph>
+                        {course.description}
+                      </Typography>
+
+                      {/* Liste des documents */}
+                      {(course.documents || []).length > 0 ? (
+                        (course.documents || []).map((document, index) => (
+                          <Box key={index} sx={{ mb: 2 }}>
+                            <a href={document.url} target="_blank" rel="noopener noreferrer">
+                              {document.name}
+                            </a>
+                            <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                              Téléchargé le {new Date(document.uploadedAt).toLocaleDateString()}
+                            </Typography>
+                          </Box>
+                        ))
+                      ) : (
+                        <Typography variant="body2" color="textSecondary">
+                          Aucun document disponible pour ce cours.
+                        </Typography>
+                      )}
+
+                      {/* Formulaire de téléchargement de fichier */}
+                      <div style={{ marginTop: '1rem' }}>
+                        <Input
+                          type="file"
+                          onChange={(e) => handleFileChange(course._id, e.target.files[0])}
+                          sx={{ display: 'none' }}
+                          id={`file-upload-${course._id}`}
+                        />
+                        <label htmlFor={`file-upload-${course._id}`}>
+                          <Button
+                            variant="outlined"
+                            component="span"
+                            startIcon={<InsertDriveFileIcon />}
+                          >
+                            Choisir un fichier
+                          </Button>
+                        </label>
+
+                        {selectedFiles[course._id] && (
+                          <div style={{ marginTop: '1rem' }}>
+                            <Typography variant="body2">
+                              Fichier sélectionné: {selectedFiles[course._id].name}
+                            </Typography>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              onClick={() => handleFileUpload(course._id)}
+                              disabled={uploading}
+                              sx={{ mt: 1 }}
+                            >
+                              {uploading ? 'Téléchargement...' : 'Envoyer le fichier'}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </AccordionDetails>
+                  </Accordion>
+                ))}
+
+                {/* Emploi du temps */}
+                <Typography variant="body2" color="textSecondary" sx={{ mt: 2 }}>
+                  Emploi du temps:
+                </Typography>
+                <List dense>
+                  {cls.schedule.map((sched, index) => (
+                    <ListItem key={index}>
+                      <ListItemText
+                        primary={`${sched.day} - ${sched.time}`}
+                        secondary={sched.course}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Affichage des erreurs */}
+        {error && (
+          <Typography color="error" sx={{ mt: 2 }}>
+            {error}
+          </Typography>
         )}
       </div>
     </div>

@@ -1,4 +1,3 @@
-// src/components/AppSidebar.js
 import React, { useState } from 'react';
 import {
   Box,
@@ -11,21 +10,25 @@ import {
   Divider,
   Typography,
   IconButton,
+  Avatar,
 } from '@mui/material';
-import HomeIcon from '@mui/icons-material/Home';
-import MessageIcon from '@mui/icons-material/Message';
-import ClassIcon from '@mui/icons-material/Class';
-import LogoutIcon from '@mui/icons-material/Logout';
-import MenuIcon from '@mui/icons-material/Menu';
-import PeopleIcon from '@mui/icons-material/People';
-import PersonIcon from '@mui/icons-material/Person';
-import SchoolIcon from '@mui/icons-material/School';
+import {
+  Home as HomeIcon,
+  Message as MessageIcon,
+  Class as ClassIcon,
+  Logout as LogoutIcon,
+  Menu as MenuIcon,
+  People as PeopleIcon,
+  Person as PersonIcon,
+  School as SchoolIcon,
+} from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
-const AppSidebar = ({ drawerWidth = 240 }) => {
+const AppSidebar = ({ drawerWidth = 260 }) => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const role = localStorage.getItem('role');
+  const userEmail = localStorage.getItem('email') || 'Utilisateur';
 
   const getHomePath = () => {
     if (role === 'admin') return '/admin-dashboard';
@@ -34,29 +37,24 @@ const AppSidebar = ({ drawerWidth = 240 }) => {
     return '/';
   };
 
-  let menuItems = [
-    { text: 'Accueil', icon: <HomeIcon />, path: getHomePath() },
-  ];
+  let menuItems = [{ text: 'Accueil', icon: <HomeIcon />, path: getHomePath() }];
 
   if (role === 'admin') {
-    menuItems = [
-      ...menuItems,
+    menuItems.push(
       { text: 'Étudiants', icon: <PeopleIcon />, path: '/admin-students' },
       { text: 'Enseignants', icon: <PersonIcon />, path: '/admin-teachers' },
-      { text: 'Classes', icon: <SchoolIcon />, path: '/admin-classes' },
-    ];
+      { text: 'Classes', icon: <SchoolIcon />, path: '/admin-classes' }
+    );
   } else if (role === 'teacher') {
-    menuItems = [
-      ...menuItems,
+    menuItems.push(
       { text: 'Mes Cours', icon: <ClassIcon />, path: '/teacher-courses' },
-      { text: 'Messages', icon: <MessageIcon />, path: '/messages' },
-    ];
+      { text: 'Messages', icon: <MessageIcon />, path: '/messages' }
+    );
   } else if (role === 'student') {
-    menuItems = [
-      ...menuItems,
+    menuItems.push(
       { text: 'Mes Cours', icon: <ClassIcon />, path: '/student-courses' },
-      { text: 'Messages', icon: <MessageIcon />, path: '/messages' },
-    ];
+      { text: 'Messages', icon: <MessageIcon />, path: '/messages' }
+    );
   }
 
   const handleItemClick = (path) => {
@@ -74,29 +72,50 @@ const AppSidebar = ({ drawerWidth = 240 }) => {
   };
 
   const drawerContent = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#ffffff' }}>
       <Toolbar
         sx={{
           bgcolor: 'primary.main',
           color: 'white',
           display: 'flex',
           justifyContent: 'center',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
         }}
       >
-        <Typography variant="h6">Gestion Scolaire</Typography>
+        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+          🎓 Gestion Scolaire
+        </Typography>
       </Toolbar>
+
+      {role && (
+        <Box sx={{ display: 'flex', alignItems: 'center', p: 2 }}>
+          <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>{userEmail.charAt(0).toUpperCase()}</Avatar>
+          <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#333' }}>
+            {userEmail}
+          </Typography>
+        </Box>
+      )}
 
       <Divider />
 
-      <List sx={{ flexGrow: 1 }}>
+      <List sx={{ flexGrow: 1, p: 1 }}>
         {menuItems.map((item) => (
           <ListItem
             button
             key={item.text}
             onClick={() => handleItemClick(item.path)}
-            sx={{ '&:hover': { backgroundColor: 'primary.light', color: 'white' } }}
+            sx={{
+              borderRadius: 2,
+              mb: 1,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                backgroundColor: 'primary.light',
+                color: 'white',
+                transform: 'translateX(5px)',
+              },
+            }}
           >
-            <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
+            <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
           </ListItem>
         ))}
@@ -104,18 +123,29 @@ const AppSidebar = ({ drawerWidth = 240 }) => {
 
       <Divider />
 
-      <Box sx={{ p: 2 }}>
-        <ListItem
-          button
-          onClick={handleLogout}
-          sx={{ borderRadius: 1, '&:hover': { backgroundColor: 'error.main', color: 'white' } }}
-        >
-          <ListItemIcon sx={{ minWidth: 40 }}>
-            <LogoutIcon />
-          </ListItemIcon>
-          <ListItemText primary="Déconnexion" />
-        </ListItem>
-      </Box>
+      {role && (
+        <Box sx={{ p: 2 }}>
+          <ListItem
+            button
+            onClick={handleLogout}
+            sx={{
+              borderRadius: 2,
+              bgcolor: 'error.main',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'error.dark',
+                transform: 'scale(1.05)',
+              },
+              transition: 'all 0.3s ease',
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
+              <LogoutIcon />
+            </ListItemIcon>
+            <ListItemText primary="Déconnexion" />
+          </ListItem>
+        </Box>
+      )}
     </Box>
   );
 
@@ -135,7 +165,12 @@ const AppSidebar = ({ drawerWidth = 240 }) => {
         variant="permanent"
         sx={{
           display: { xs: 'none', sm: 'block' },
-          '& .MuiDrawer-paper': { width: drawerWidth, bgcolor: '#f5f5f5', color: '#333' },
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            bgcolor: '#fafafa',
+            boxShadow: '4px 0 12px rgba(0, 0, 0, 0.1)',
+            borderRight: 'none',
+          },
         }}
         open
       >
@@ -149,7 +184,12 @@ const AppSidebar = ({ drawerWidth = 240 }) => {
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', sm: 'none' },
-          '& .MuiDrawer-paper': { width: drawerWidth, bgcolor: '#f5f5f5', color: '#333' },
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            bgcolor: '#fafafa',
+            boxShadow: '4px 0 12px rgba(0, 0, 0, 0.1)',
+            borderRight: 'none',
+          },
         }}
       >
         {drawerContent}
