@@ -5,7 +5,12 @@ import { FaEdit } from 'react-icons/fa';
 import './ParentDashboard.css';
 
 const ParentDashboard = () => {
-    const [parentInfo, setParentInfo] = useState({ firstName: '', lastName: '', email: '', phoneNumber: '' });
+    const [parentInfo, setParentInfo] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phoneNumber: ''
+    });
     const [studentInfo, setStudentInfo] = useState(null);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
@@ -21,26 +26,30 @@ const ParentDashboard = () => {
                     return;
                 }
 
-                const response = await axios.get('http://localhost:5000/api/parents/profile', { params: { email } });
+                // Récupération des informations du parent
+                const parentResponse = await axios.get('http://localhost:5000/api/parents/profile', {
+                    params: { email }
+                });
+                setParentInfo({
+                    firstName: parentResponse.data.firstName || '',
+                    lastName: parentResponse.data.lastName || '',
+                    email: parentResponse.data.email || '',
+                    phoneNumber: parentResponse.data.phoneNumber || '',
+                });
 
-                if (response.data) {
-                    setParentInfo({
-                        firstName: response.data.firstName || '',
-                        lastName: response.data.lastName || '',
-                        email: response.data.email || '',
-                        phoneNumber: response.data.phoneNumber || '',
-                    });
-                }
+                // Récupération des informations de l'étudiant
+                const studentResponse = await axios.get('http://localhost:5000/api/parents/dashboard', {
+                    params: { email }
+                });
 
-                const dashboardResponse = await axios.get('http://localhost:5000/api/parents/dashboard', { params: { email } });
-
-                if (dashboardResponse.data.student) {
+                if (studentResponse.data.student) {
                     setStudentInfo({
-                        firstName: dashboardResponse.data.student.firstName || '',
-                        lastName: dashboardResponse.data.student.lastName || '',
-                        class: dashboardResponse.data.student.class || { name: '', price: 0, schedule: [] },
+                        firstName: studentResponse.data.student.firstName,
+                        lastName: studentResponse.data.student.lastName,
+                        class: studentResponse.data.student.class || null
                     });
                 }
+
             } catch (error) {
                 console.error('Erreur lors de la récupération des données :', error);
                 setError('Impossible de récupérer les données. Veuillez réessayer plus tard.');
@@ -59,10 +68,9 @@ const ParentDashboard = () => {
     const handlePaymentClick = async () => {
         setError('');
         try {
-            const email = localStorage.getItem('email');
             const response = await axios.post('http://localhost:5000/api/payments/stripe', {
-                email,
-                amount: studentInfo.class.price,
+                email: parentInfo.email,
+                amount: studentInfo.class?.price
             });
 
             if (response.data.url) {
@@ -77,7 +85,8 @@ const ParentDashboard = () => {
     };
 
     const formatSchedule = (schedule) => {
-        if (!schedule || !Array.isArray(schedule)) return 'Aucun planning disponible';
+        if (!schedule || !Array.isArray(schedule)) return null;
+
         return schedule.map((item, index) => (
             <div key={index} className="schedule-item">
                 <p><strong>Jour :</strong> {item.day}</p>
@@ -88,45 +97,108 @@ const ParentDashboard = () => {
     };
 
     if (loading) {
-        return <div className="loading">Chargement en cours...</div>;
+        return (
+            <div className="dashboard-container">
+                <div className="loading-container">
+                    <div className="loading-spinner"></div>
+                    <p>Chargement en cours...</p>
+                </div>
+            </div>
+        );
     }
 
     return (
         <div className="dashboard-container">
             <div className="dashboard-content">
+                {/* En-tête du profil */}
                 <div className="profile-header">
                     <h2>Bonjour, {parentInfo.firstName} {parentInfo.lastName}</h2>
-                    <button className="edit-profile-button" onClick={handleEditProfile}>
-                        <FaEdit /> Modifier le profil
+                    <button
+                        className="edit-profile-button"
+                        onClick={handleEditProfile}
+                    >
+                        <FaEdit className="edit-icon" />
+                        Modifier le profil
                     </button>
                 </div>
 
-                {error && <p className="error-message">{error}</p>}
+                {/* Message d'erreur */}
+                {error && <div className="error-message">{error}</div>}
 
-                <div className="card profile-info">
-                    <h3>Informations du Profil</h3>
-                    <p><strong>Email :</strong> {parentInfo.email}</p>
-                    <p><strong>Téléphone :</strong> {parentInfo.phoneNumber}</p>
+                {/* Carte d'information du parent */}
+                <div className="info-card">
+                    <h3>Informations du parent</h3>
+                    <div className="info-grid">
+                        <div className="info-item">
+                            <label>Email :</label>
+                            <p>{parentInfo.email}</p>
+                        </div>
+                        <div className="info-item">
+                            <label>Téléphone :</label>
+                            <p>{parentInfo.phoneNumber || 'Non renseigné'}</p>
+                        </div>
+                    </div>
                 </div>
 
+                {/* Section étudiant */}
                 {studentInfo ? (
-                    <div className="card student-info">
-                        <h3>Informations de l'Étudiant</h3>
-                        <p><strong>Nom :</strong> {studentInfo.firstName} {studentInfo.lastName}</p>
-                        <p><strong>Classe :</strong> {studentInfo.class.name}</p>
-                        <p><strong>Prix :</strong> ${studentInfo.class.price}</p>
+                    <div className="info-card">
+                        <h3>Informations de l'étudiant</h3>
+                        <div className="student-details">
+                            <div className="info-item">
+                                <label>Nom complet :</label>
+                                <p>{studentInfo.firstName} {studentInfo.lastName}</p>
+                            </div>
 
-                        <h4>Planning des Cours</h4>
-                        <div className="schedule-container">{formatSchedule(studentInfo.class.schedule)}</div>
+                            {studentInfo.class ? (
+                                <>
+                                    <div className="info-item">
+                                        <label>Classe :</label>
+                                        <p>{studentInfo.class.name}</p>
+                                    </div>
+                                    <div className="info-item">
+                                        <label>Frais scolaires :</label>
+                                        <p>${studentInfo.class.price}</p>
+                                    </div>
 
-                        <button className="action-button" onClick={handlePaymentClick}>
-                            Payer Maintenant
-                        </button>
+                                    <div className="schedule-section">
+                                        <h4>Emploi du temps</h4>
+                                        {studentInfo.class.schedule?.length > 0 ? (
+                                            <div className="schedule-grid">
+                                                {formatSchedule(studentInfo.class.schedule)}
+                                            </div>
+                                        ) : (
+                                            <div className="no-schedule">
+                                                Aucun emploi du temps disponible
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <button
+                                        className="payment-button"
+                                        onClick={handlePaymentClick}
+                                    >
+                                        Payer les frais scolaires
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="no-class-assigned">
+                                    <h4>Aucune classe assignée</h4>
+                                    <p>
+                                        Votre enfant n'est actuellement assigné à aucune classe.<br />
+                                        Veuillez contacter l'administration scolaire.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 ) : (
-                    <div className="no-student-assigned card">
-                        <h3>Aucun Enfant Assigné</h3>
-                        <p>Veuillez contacter l'administration pour l'assignation d'un enfant.</p>
+                    <div className="no-student-assigned">
+                        <h3>Aucun enfant assigné</h3>
+                        <p>
+                            Vous n'avez actuellement aucun enfant associé à votre compte.<br />
+                            Veuillez contacter l'administration pour effectuer une assignation.
+                        </p>
                     </div>
                 )}
             </div>
